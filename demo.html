@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+		<link rel="stylesheet" href="lib/css/index.css" />
+		<link rel="stylesheet" href="lib/css/comm.css" />
+	</head>
+	
+	<body>
+		<div class="header clear">
+			<image src="image/ship.jpg"></image>
+			<ul class="clear">
+				<li class="active">
+					<a href="info.html" >个人简介</a>
+				</li>
+				<li>
+					<a href="demo.html" class="active">项 目 集</a>
+				</li>
+				<li>
+					<a href="graphics.html" >图 形 学</a>
+				</li>
+				<li>
+					<a href="index.html">首 &nbsp 页</a>
+				</li>
+			</ul>
+		</div>
+		<div class="demo-content">
+			<div class="basic-example">
+				<p>1.基 础 案 例</p>
+				<ul class="rotate">
+					<li>
+						<a href="demo/rotate.html">旋  转</a>
+					</li>
+					<li>
+						<a href="demo/wave.html">网  格 模 拟 波 浪</a>
+					</li>
+					<li>
+						<a href="demo/texture.html">普 通 贴 图</a>
+					</li>
+					<li>
+						<a href="demo/square.html">立 方 体</a>
+					</li>
+				</ul>
+			</div>
+			<div class="basic-example">
+				<p>2.正交投影与透视投影(相机)</p>
+				<ul class="rotate">
+					<li>
+						<a href="demo/setOrtho_3D.html">正交投影变换(无深度感)</a>
+					</li>
+					<li>
+						<a href="demo/setPerspective_3D.html">透视投影变换(有深度感)</a>
+					</li>
+					<li>
+						<a href="demo/setPerspective_mvp_3D.html">透视投影(Model,View,Projection)</a>
+					</li>
+				</ul>
+			</div>
+			
+			<div class="basic-example">
+				<p>3.光照模型</p>
+				<ul class="rotate">
+					<li>
+						<a href="demo/LightCube_amibient.html">环境光(顶点着色器渲染)</a>
+					</li>
+					<li>
+						<a href="demo/point_LightCube.html">点光源(顶点着色器渲染)</a>
+					</li>
+					<li>
+						<a href="demo/pointFrage_LightCube.html">点光源(片元着色器渲染)</a>
+					</li>
+				</ul>
+			</div>
+			<div class="basic-example">
+				<p>4.层次模型与模型交互</p>
+				<ul class="rotate">
+					<li>
+						<a href="demo/ctrl_model.html">层次模型</a>
+					</li>
+					<li>
+						<a href="demo/mouse_ctrl.html">鼠标与静态模型交互</a>
+					</li>
+					<li>
+						<a href="demo/mouse_ctrl_animate.html">鼠标与动态模型交互</a>
+					</li>
+				</ul>
+			</div>
+			<div class="basic-example">
+				<p>5.Noise</p>
+				<ul class="rotate">
+					<li>
+						<a href="demo/fire.html">火焰模拟(FBM)</a>
+			
+					</li>
+					<li>
+						<a href="demo/water.html">动态水模拟</a>
+					</li>
+					<li>
+						<a href="demo/ink_in_water.html">水墨模拟</a>
+					</li>
+				</ul>
+			</div>
+			<div class="basic-example">
+				<p>6.渲染</p>
+				<ul class="rotate">
+					<li>
+						<a href="demo/light_demo/index.html">伪法向量贴图</a>
+					</li>
+					<li>
+						<a href="demo/shadow_demo/shadow.html">阴影(shadow map)</a>
+					</li>
+					<li>
+						<a href="demo/shadow_demo/fallOff.html">光线线性衰减</a>
+					</li>
+					<li>
+						<a href="demo/shadow_demo/FBO.html">FBO(object frame buffer)</a>
+					</li>
+				</ul>
+			</div>
+			<div class="canvas-show">
+				<p>多光源模拟</p>
+				<canvas id="demoShow" width="600px;" height="600px;"></canvas>
+				<span>(优化代码需要的时间过长，暂时没有优化到阴影)阴影的渲染参考第六节 -> 阴影</span>
+				<a href="">Source >></a>
+			</div>
+		</div>
+		<div class="footer">
+			<p>由于前期代码没有优化，并且没有使用任何的框架( Three.js，Babylon.js， D3.js )。代码看起来有些杂乱，在项目集里我会介绍一下自己总结的简化的可以算作是webgl + GLSL的小型框架</p>
+			<div>
+				<p>交流邮箱：</p>
+				<span>987928450@qq.com</span>
+			</div>
+		</div>
+	
+	</body>
+	
+	<script type="text/javascript" src="lib/js/auto_function.js"></script>
+	<script type="text/javascript" src="lib/js/cuon-matrix.js"></script>
+	<script type="text/javascript" src="lib/js/cuon-utils.js"></script>
+	<script type="text/javascript" src="lib/js/webgl-debug.js"></script>
+	<script type="text/javascript" src="lib/js/webgl-utils.js"></script>
+	<script type="text/javascript" src="lib/js/model_info.js"></script>
+	<script type="text/javascript" src="lib/js/double_fire.js"></script>
+	<script type="text/javascript">
+	</script>
+
+</html>

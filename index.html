@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+		<link rel="stylesheet" href="lib/css/index.css" />
+		<link rel="stylesheet" href="lib/css/comm.css" />
+	</head>
+	
+	<body>
+		<div class="header clear">
+			<image src="image/ship.jpg"></image>
+			<ul class="clear">
+				<li class="active">
+					<a href="info.html" >个人简介</a>
+				</li>
+				<li>
+					<a href="demo.html">项 目 集</a>
+				</li>
+				<li>
+					<a href="graphics.html">图 形 学</a>
+				</li>
+				<li>
+					<a href="index.html" class="active">首 &nbsp 页</a>
+				</li>
+			</ul>
+		</div>
+		<div class="container clear">
+			<canvas id="tiyan" width="400px" height="400px" ></canvas>
+			<div class="control">
+				<ul class="camera-lookAt clear">
+					<li class="eye clear">
+						<span>Eye</span>
+						<input id="eyeX" value="20"></input>
+						<input id="eyeY" value="20"></input>
+						<input id="eyeZ" value="25"></input>
+					</li>
+					<li class="target clear">
+						<span>Target</span>
+						<input id="targetX" value="0"></input>
+						<input id="targetY" value="0"></input>
+						<input id="targetZ" value="0"></input>
+					</li>
+					<li class="up clear">
+						<span>Up</span>
+						<input id="upX" value="0"></input>
+						<input id="upY" value="1"></input>
+						<input id="upZ" value="0"></input>
+					</li>
+				</ul>
+			</div>
+			<div class="container-font">
+				<p>初 次 体 验 Web 3D</p>
+				<ul>
+					<li>
+						<span>红轴对应X轴</span>
+					</li>
+					<li>
+						<span>绿轴对应Y轴</span>
+					</li>
+					<li>
+						<span>红轴对应Z轴</span>
+					</li>
+					<li>
+						<span>参数Eye，对应视角(眼睛)位置</span>
+					</li>
+					<li>
+						<span>参数Target，对应模型(目标)相对位置</span>
+					</li>
+					<li>
+						<span>参数Up，对应上方向(相机正方向)</span>
+					</li>
+				</ul>
+				<span>(按上,下方向键，调整视角，模型，上方向位置)</span>
+				<a	href="http://www.baidu.com">Source>></a>
+			</div>
+		</div>
+		<div class="details">
+			<ul class="noise clear">
+				<li>
+					<p>噪声</p>
+					<span>Perlin Noise模拟水墨</span>
+					<div>
+						<img src="image/noise_sky.jpg"/>
+					</div>
+				</li>
+				<li class="details_spe">
+					<p>法向量贴图</p>
+					<span>Normal Map(凹凸贴图)</span>
+					<div>
+						<img src="image/normal_map.png"/>
+					</div>
+				</li>
+				<li>
+					<p>阴影</p>
+					<span>Shadow Map</span>
+					<div>
+						<img src="image/shadow_map.jpg"/>
+					</div>
+				</li>
+				<li class="noborder">
+					<p>F B O</p>
+					<span>Frame Buffer Object + 高斯模糊</span>
+					<div>
+						<img src="image/fbo.jpg"/>
+					</div>
+				</li>
+				<li class="details_spe noborder">
+					<p>多光源渲染</p>
+					<span>火焰光 + 点光源</span>
+					<div>
+						<img src="image/fire_color.jpg"/>
+					</div>
+				</li>
+				<li class="noborder">
+					<p>Specular(镜面反射)</p>
+					<span>镜面反射 + 法向量贴图</span>
+					<div>
+						<img src="image/specular.jpg"/>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<div class="index-bottom clear">
+			<div>
+				<p>模 拟 示 例</p>
+			</div>
+			<image src="image/fire.jpg"/>
+			<image src="image/round.jpg"/>
+			<image src="image/light_cube.jpg" class="margin-none"/>
+		</div>
+		<div class="footer">
+			<p>由于前期代码没有优化，并且没有使用任何的框架( Three.js，Babylon.js， D3.js )。代码看起来有些杂乱，在项目集里我会介绍一下自己总结的简化的可以算作是webgl + GLSL的小型框架</p>
+			<div>
+				<p>交流邮箱：</p>
+				<span>987928450@qq.com</span>
+			</div>
+		</div>
+	</body>
+	
+	<script type="text/javascript" src="lib/js/auto_function.js"></script>
+	<script type="text/javascript" src="lib/js/cuon-matrix.js"></script>
+	<script type="text/javascript" src="lib/js/cuon-utils.js"></script>
+	<script type="text/javascript" src="lib/js/webgl-debug.js"></script>
+	<script type="text/javascript" src="lib/js/webgl-utils.js"></script>
+	<script type="text/javascript" src="lib/js/tiyan.js"></script>
+	<script type="text/javascript">
+	</script>
+
+</html>
