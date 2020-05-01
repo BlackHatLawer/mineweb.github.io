@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<canvas id="drawing" width="400px" height="400px">A drawing of something.</canvas>
+	</body>
+	<script type="text/javascript" src="../lib/js/webgl-utils.js"></script>
+	<script type="text/javascript" src="../lib/js/cuon-matrix.js"></script>
+	<script type="text/javascript" src="../lib/js/webgl-debug.js"></script>
+	<script type="text/javascript">
+	var VSHADER_SOURCE = 
+	"attribute vec3 a_Position;\n"+
+	"uniform mat4 u_MvpMatrix;\n"+
+	"void main(){;\n"+
+	"	gl_Position = u_MvpMatrix * vec4(a_Position,1.0);\n"+
+	"}\n";
+	
+	var FSHADER_SOURCE = 
+	"#ifdef GL_ES\n"+
+	"precision highp float;\n"+
+	"#endif\n"+
+	"void main(){\n"+
+	" gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);\n"+
+	"}\n";
+	
+	var canvas = document.getElementById("drawing");
+		var gl = canvas.getContext("webgl");
+		if(!gl){
+			console.log("get gl failed");
+		}
+		
+		var shaderProgram = blinkProgram(gl, VSHADER_SOURCE, FSHADER_SOURCE); 
+		if(!shaderProgram){
+			console.log("get program failed");
+		}
+		gl.useProgram(shaderProgram);
+		var position;
+		var indices_buffer = gl.createBuffer();
+		var buffer = gl.createBuffer();
+	function initArray(gl){
+		 var position_init = [];
+		for(var i = -1; i < 1;i += 0.1){
+			for(var j = 1;j > -1;j -= 0.1){
+				position_init.push(j);
+				position_init.push(i);
+				position_init.push(0);
+			}
+		} 
+		 position = new Float32Array(position_init);
+		 
+		var stitch = [];
+		for(var i = 0; i < 21 * 21 - 21 - 1;i++){
+			var j = i + 21;
+			if(((j+1) - 20) % 21 == 0 && (j + 1) < 21 * 21 - 1){
+				stitch.push(i);
+				stitch.push(i + 1);
+				stitch.push(j);
+				
+				stitch.push(i + 1);
+				stitch.push(j);
+				stitch.push(j + 1); 
+				
+				i += 2;
+				j += 2;
+			}
+			
+			stitch.push(i);
+			stitch.push(i + 1);
+			stitch.push(j);
+			
+			stitch.push(i + 1);
+			stitch.push(j);
+			stitch.push(j + 1);
+		} 
+		var indices = new Uint16Array(stitch);
+		
+		
+		
+		if(!indices_buffer){
+			console.log("create indices_buffer failed");
+			return -1;
+		}
+		//gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices_buffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+		
+		return indices.length;
+	}
+	function initbuffer(gl, attribute, data, count, type){
+		
+		if(!buffer){
+			console.log("create buffer failed");
+			return false;
+		}
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+		
+		var a_attribute = gl.getAttribLocation(shaderProgram, attribute);
+		if(attribute < 0){
+			console.log("get attribute failed" + a_attribute);
+			return false;
+		}
+		gl.enableVertexAttribArray(a_attribute);
+		gl.vertexAttribPointer(a_attribute, count, type, false, 0, 0);
+
+		return true;
+	}
+	
+	function disVec(v, i){
+		if(i == 1){
+			return vec3_minus(v, Di1).normalize();
+		}
+		else if(i == 2){
+			return vec3_minus(v, Di2).normalize();
+		}
+		else if(i == 3){
+			return vec3_minus(v, Di3).normalize();
+		}
+	}
+	
+	function dotDisVec(v, i){
+		return dot(disVec(v, i), v);
+	}
+	function dot(Array1, Array2){
+		var dot_result = Array1.elements[0] * Array2.elements[0]
+						+Array1.elements[1] * Array2.elements[1] 
+						+ Array1.elements[2] * Array2.elements[2];
+		return dot_result;
+	}
+	
+	
+	var Di1 = new Vector3([1, -0.6, 1]),		//方向 1			  
+		Di2 = new Vector3([1, -1, 1]);		//方向 2
+		Di3 = new Vector3([1, -1, 1]);		//方向 3
+		
+	var t = 0.01;
+	function gerstnerWave(position){
+		var newPos = new Array(position.length) ;
+		//newPos.concat();
+		newPos= position.slice(0);
+		
+		var	A = 0.5, 							//振幅
+			W = 1.5, 							//角速度
+			Q = 0.5,	
+			C = 0.7;
+		var len = position.length;
+		for(var i = 0; i < len; i += 3){
+			var position_vec3 = new Vector3([position[i], position[i + 1] , position[i + 2] - 0.6]);
+			var position_nored = position_vec3.normalize(),
+				dotDi1 = dot(position_nored, Di1),
+				dotDi2 = dot(position_nored, Di2),
+				dotDi3 = dot(position_nored, Di3);
+			//x
+			newPos[i] = newPos[i] + Q * A * position_nored.elements[0] * Math.cos( W * dotDi1 + C * t)
+						+ Q * A * position_nored.elements[0] * Math.cos( W * dotDi2 + C * t)
+						+ Q * A * position_nored.elements[0] * Math.sin( W * dotDi3 + C * t);
+			//y
+			//newPos[i + 1] = A * Math.sin(W * dotDi1 + Q * t) + A * Math.sin(W * dotDi2 + Q * t) + A * Math.sin(W * dotDi3 + Q * t)
+			//z
+			newPos[i + 2] += Q * A * position_nored.elements[2] * Math.cos(W * dotDi1 + C * t)
+						   + Q * A * position_nored.elements[2] * Math.sin(W * dotDi2 + C * t)
+						   + Q * A * position_nored.elements[2] * Math.cos(W * dotDi3 + C * t);
+			
+			//normal
+			
+			
+		}
+		return newPos;
+	}
+	
+	function main(){
+		var n = initArray(gl);
+		if(n < 0){
+			console.log("get vertex information failed");
+		}
+		
+		var u_MvpMatrix = gl.getUniformLocation(shaderProgram, "u_MvpMatrix");
+		if(!u_MvpMatrix){
+			console.log("get u_MvpMatrix information failed");
+		}
+		var modelMatrix = new Matrix4();
+		modelMatrix.setScale(10, 10, 10.0);
+		
+		var mvpMatrix = new Matrix4();
+		mvpMatrix.setPerspective(45, canvas.width/canvas.height, 1, 10000);
+		mvpMatrix.lookAt(0, 28, 30.0, 0, -10, 0, 0, 10, 10);
+		mvpMatrix.multiply(modelMatrix);
+		gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+		gl.enable(gl.DEPTH_TEST);
+		//gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
+		
+		function tick(){
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			var newpp = gerstnerWave(position);
+			
+			if(!initbuffer(gl, "a_Position", newpp, 3, gl.FLOAT)){
+				console.log("initbuffer a_Position failed");
+				return -1;
+			}
+			gl.drawElements(gl.LINES, n, gl.UNSIGNED_SHORT, 0);
+			window.requestAnimationFrame(tick);
+			t= t + 0.05;
+		}
+		tick();
+	}
+	//编译着色器
+function blinkProgram(gl,VSHADER_SOURCE,FSHADER_SOURCE){
+	var vertShader = gl.createShader(gl.VERTEX_SHADER);
+	gl.shaderSource(vertShader, VSHADER_SOURCE);
+	gl.compileShader(vertShader);
+	if(!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS))
+	{  
+        console.log("vertShader erro:  "+gl.getShaderInfoLog(vertShader));  
+    }
+	
+	var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+	gl.shaderSource(fragShader, FSHADER_SOURCE);
+	gl.compileShader(fragShader);
+	if(!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS))
+	{  
+        console.log("fragShader erro:  "+gl.getShaderInfoLog(fragShader));  
+    }
+	
+	var shaderProgram = gl.createProgram();
+	gl.attachShader(shaderProgram, vertShader);
+	gl.attachShader(shaderProgram, fragShader);
+	gl.linkProgram(shaderProgram);
+	if(!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
+	{        
+        console.log(gl.getProgramInfoLog(shaderProgram));  
+    }
+	
+	gl.useProgram(shaderProgram);
+	return shaderProgram;
+};
+//计时函数
+var last_time=Date.now();
+function timer(current_angle,R_angles){
+	var now = Date.now();
+	//console.log("last:"+last_time+"--"+"now:"+now);
+	var elapsed = now - last_time;
+	last_time = now;
+	var newAngle = current_angle + (R_angles * elapsed) / 300.0;
+	//console.log(newAngle);
+	return newAngle;
+}	
+
+
+
+	main();
+	
+	</script>
+	
+</html>

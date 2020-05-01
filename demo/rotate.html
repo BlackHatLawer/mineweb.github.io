@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<canvas id="drawing" width="400px" height="400px">A drawing of something.</canvas>
+	</body>
+	<script type="text/javascript">
+		window.onload = function () {
+			var VSHADER_SOURCE =
+				"attribute vec4 a_Position;" +
+				"uniform mat4 u_xunifMatrix;"+
+				"void main() {" +
+				//设置坐标
+				"gl_Position = a_Position*u_xunifMatrix;" +
+				"} ";
+
+			//片元着色器
+			var FSHADER_SOURCE =
+				"void main() {" +
+				"gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);" +
+				"}";
+				
+			//获取canvas元素
+			var canvas = document.getElementById('drawing');
+			//获取绘制二维上下文
+			var gl = canvas.getContext('webgl');
+			if (!gl) {
+				console.log("Failed");
+				return;
+			}
+		
+			var R_angles =20;
+			var currentAngles=0.0;
+			var shaderProgram = blinkProgram(gl,VSHADER_SOURCE,FSHADER_SOURCE);
+			//计时
+			function rotate()
+			{
+				currentAngles = animate(currentAngles,R_angles);
+				//console.log(currentAngles);
+				var radian = Math.PI * currentAngles / 180;
+				//console.log(radian);
+				var cosB = Math.cos(radian), sinB = Math.sin(radian);
+				//var sx = 1.5, sy = 1.5, sz = 1.0;
+				var xformMatrix = new Float32Array([
+					cosB, -sinB, 0.0, 0.0,
+					sinB,  cosB, 0.0, 0.0,
+					0, 0, 1.0, 0.0,
+					0.0,0.0,0.0,1.0
+				]);
+				//获取坐标点
+				var a_Position = gl.getAttribLocation(shaderProgram, 'a_Position');
+
+				if (a_Position < 0) {
+					console.log('Failed to get the storage location of a_Position');
+					return;
+				}
+				var u_xformMatirx = gl.getUniformLocation(shaderProgram, "u_xunifMatrix");
+				if (u_xformMatirx < 0) {
+					console.log('Failed to get the storage location of u_xunifMatrix');
+				}
+				gl.uniformMatrix4fv(u_xformMatirx, false, xformMatrix);
+			}
+			
+			function draw()
+			{
+				rotate();
+				var vertices = new Float32Array([
+					-0.5,0.5, -0.5,-0.5 ,0.5,0.5
+				]);
+				//创建缓冲区对象
+				var vertexBuffer = gl.createBuffer();
+				if(!vertexBuffer){
+					console.log("Failed to create the butter object");
+					return -1;
+				}
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
+				var a_Position = gl.getAttribLocation(shaderProgram, 'a_Position');
+				gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+				gl.enableVertexAttribArray(a_Position);
+					
+				gl.clearColor(0.0, 0.0, 0.0, 0.0);
+				gl.clear(gl.COLOR_BUFFER_BIT);
+				gl.drawArrays(gl.TRIANGLES, 0, 3);
+			}
+			
+			function tick()
+			{
+				draw();
+				requestAnimationFrame(tick,canvas);
+			}
+			tick();
+		}
+		
+		function blinkProgram(gl,VSHADER_SOURCE,FSHADER_SOURCE){
+			var vertShader = gl.createShader(gl.VERTEX_SHADER);
+			gl.shaderSource(vertShader, VSHADER_SOURCE);
+			gl.compileShader(vertShader);
+			if(!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS))
+			{  
+				console.log("vertShader erro:  "+gl.getShaderInfoLog(vertShader));  
+			}
+			
+			var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+			gl.shaderSource(fragShader, FSHADER_SOURCE);
+			gl.compileShader(fragShader);
+			if(!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS))
+			{  
+				console.log("fragShader erro:  "+gl.getShaderInfoLog(fragShader));  
+			}
+			
+			var shaderProgram = gl.createProgram();
+			gl.attachShader(shaderProgram, vertShader);
+			gl.attachShader(shaderProgram, fragShader);
+			gl.linkProgram(shaderProgram);
+			if(!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
+			{        
+				console.log(gl.getProgramInfoLog(shaderProgram));  
+			}
+			
+			gl.useProgram(shaderProgram);
+			return shaderProgram;
+		}
+		//计时函数
+		var last_time=Date.now();
+		function animate(current_angle,R_angles){
+			var now = Date.now();
+			//console.log("last:"+last_time+"--"+"now:"+now);
+			var elapsed = now - last_time;
+			last_time = now;
+			var newAngle = current_angle + (R_angles * elapsed) / 300.0;
+			//console.log(newAngle);
+			return newAngle;
+		}	
+	</script>
+</html>

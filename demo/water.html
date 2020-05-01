@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<canvas id="webgl" width="400px" height="400px">A drawing of something.</canvas>
+	</body>
+	<script type="text/javascript">
+		var VSHADER_SOURCE =
+			"attribute vec4 a_Position;\n" +
+			"attribute vec2 a_TexCoord;\n"+
+			
+			"varying vec2 v_TexCoord;\n"+
+			"void main() {" +
+			"gl_Position = a_Position;\n" +
+			"v_TexCoord=a_TexCoord;\n" +
+			"}\n";
+
+		var FSHADER_SOURCE =
+			"precision mediump float;\n"+
+			"uniform sampler2D u_Sampler;\n"+
+			"varying vec2 v_TexCoord;\n"+
+			"uniform float u_Time;\n"+
+			"vec2 hash(in vec2 p);\n"+
+			"float noise(in vec2 p);\n"+
+			"float fbm(in vec2 uv);\n"+
+			"float random(in vec2 co);\n"+
+			
+			"void main() {" +
+			"	vec4 texColor = texture2D(u_Sampler, v_TexCoord);\n"+
+			"	vec2 resolution = vec2(1024.0, 1024.0);\n"+
+			"	vec2 st = v_TexCoord * 5.0;\n"+
+			"	vec3 color = vec3(1.0);\n"+
+			"	vec2 q = vec2(0.5,0.5);\n"+
+			"	q.x = fbm(st + 0.2 * u_Time);\n"+
+			"	q.y = fbm(st + vec2(0.0));\n"+
+			
+			"	vec2 r = vec2(0.0);\n"+
+			"	r.x = fbm(st + 1.0 * q + vec2(1.7, 9.2) + 0.15 * u_Time);\n"+
+			"	r.y = fbm(st + 1.0 * q + vec2(8.3, 2.8) + 0.126 * u_Time);\n"+
+			"	float f = fbm(st + r);\n"+
+			"	color = mix(vec3(0.601961, 0.619608, 0.666667), vec3(0.666667, 0.666667, 0.698039),clamp((f) * 4.0, 1.0, 1.0));\n"+
+			"	color = mix(color, vec3(1.0, 1.0, 0.964706), clamp(length(q), 1.0, 1.0));\n"+
+			"	color = mix(color, vec3(1.0, 1.0, 1.0), clamp(length(r.x), 1.0, 1.0));\n"+
+			"	gl_FragColor = vec4((f * f + 0.8 * f * f + 0.5 * f) * color * texColor.rgb * 0.8, 1.0);\n"+
+			"}"+
+			
+			"vec2 hash(in vec2 p){\n"+
+			"	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));\n"+
+			"	return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);\n"+
+			"}\n"+
+			
+			"float noise(in vec2 p){\n"+
+			"	vec2 i = floor(p);\n"+
+			"	vec2 f = fract(p);\n"+
+			"	float a = random(i);\n"+
+			"	float b = random(i + vec2(1.0, 0.0));\n"+
+			"	float c = random(i + vec2(0.0, 1.0));\n"+
+			"	float d = random(i + vec2(1.0, 1.0));\n"+
+			
+			"	vec2 u = f * f * (6.0 - 5.0 * f);\n"+
+			"	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;\n"+
+			"}\n"+
+			
+			"float random(in vec2 co){\n"+
+			"	return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n"+
+			"}\n"+
+			
+			"#define NUM_OCTAVES 5\n"+
+			
+			"float fbm(in vec2 uv){\n"+
+			"	float v = 0.0;\n"+
+			"	float a = 0.5;\n"+
+			"	vec2 shift = vec2(100.0);\n"+
+			"	mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.50));\n"+
+			"	for(int i = 0; i < NUM_OCTAVES; ++i){\n"+
+			"		v += a * noise(uv);\n"+
+			"		uv = rot * uv * 2.0 + shift;\n"+
+			"		a *= 0.65;\n"+
+			"	}\n"+
+			"	return v;\n"+
+			"}\n";
+		
+		var canvas = document.getElementById('webgl');
+		var gl = canvas.getContext("webgl");
+		if (!gl) {
+			console.log("gl Failed");
+		}
+		var shaderProgram = blinkProgram(gl,VSHADER_SOURCE,FSHADER_SOURCE);
+		
+		var verticesTexCoords = new Float32Array([
+			-1,  1,   0.0, 1.0,
+			-1, -1,   0.0, 0.0,
+			 1,  1,   1.0, 1.0,
+			 1, -1,   1.0, 0.0,
+		]);
+		var vertexTexCoordBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
+
+		var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
+		var a_Position = gl.getAttribLocation(shaderProgram, 'a_Position');
+		gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
+		gl.enableVertexAttribArray(a_Position);  
+		var a_TexCoord = gl.getAttribLocation(shaderProgram, 'a_TexCoord');
+		gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+		gl.enableVertexAttribArray(a_TexCoord); 
+		gl.clearColor(0.0, 0.0, 0.2, 1.0);
+		var texture = gl.createTexture();   
+		var u_Sampler = gl.getUniformLocation(shaderProgram, 'u_Sampler');
+		var image = new Image();  
+		var currentAngle = 0.0;
+		image.onload = function()
+		{ 
+			
+			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); 
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+			gl.uniform1i(u_Sampler, 0);
+			
+			var tick = function(){
+				currentAngle = animate(currentAngle);
+				var u_Time = gl.getUniformLocation(shaderProgram, "u_Time");
+				gl.uniform1f(u_Time, currentAngle);
+				gl.clear(gl.COLOR_BUFFER_BIT); 
+				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); 
+				window.requestAnimationFrame(tick);
+			};
+			tick();
+			
+		};
+		image.src="../image/stone.png";
+		
+		
+		function blinkProgram(gl,VSHADER_SOURCE,FSHADER_SOURCE){
+			var vertShader = gl.createShader(gl.VERTEX_SHADER);
+			gl.shaderSource(vertShader, VSHADER_SOURCE);
+			gl.compileShader(vertShader);
+			if(!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS))
+			{  
+				console.log("vertShader erro:  "+gl.getShaderInfoLog(vertShader));  
+			}
+			
+			var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+			gl.shaderSource(fragShader, FSHADER_SOURCE);
+			gl.compileShader(fragShader);
+			if(!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS))
+			{  
+				console.log("fragShader erro:  "+gl.getShaderInfoLog(fragShader));  
+			}
+			
+			var shaderProgram = gl.createProgram();
+			gl.attachShader(shaderProgram, vertShader);
+			gl.attachShader(shaderProgram, fragShader);
+			gl.linkProgram(shaderProgram);
+			if(!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
+			{        
+				console.log(gl.getProgramInfoLog(shaderProgram));  
+			}
+			
+			gl.useProgram(shaderProgram);
+			return shaderProgram;
+		}
+		var ANGLE_STEP = 30.0;
+		var last = Date.now();
+		function animate(angle){
+			var now = Date.now();
+			var step = now - last;
+			last = now;
+			var newAngle = angle + (ANGLE_STEP * step) / 10000.0;
+			return newAngle % 360;
+		}
+	</script>
+</html>

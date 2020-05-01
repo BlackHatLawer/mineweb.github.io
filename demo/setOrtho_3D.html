@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body onload="">
+		<canvas id="webgl" width="400px" height="400px">A drawing of something.</canvas>
+		<p style="display:block;margin-left:185px;">试试左右键？</p>
+	</body>
+
+	<script type="text/javascript" src="../lib/js/cuon-matrix.js"></script>
+	
+	<script>
+		var VSHADER_SOURCE=
+		"attribute vec4 a_Position;\n"+
+		"attribute vec4 a_Color;\n"+
+		"uniform mat4 u_ViewMatrix;\n"+
+		"uniform mat4 u_ProjMatrix;\n"+
+		"varying vec4 v_Color;\n"+
+		"void main(){\n"+
+		"gl_Position = u_ProjMatrix * u_ViewMatrix * a_Position;\n"+
+		"v_Color = a_Color;\n"+
+		"}\n";
+		
+		var FSHADER_SOURCE=
+		"precision mediump float;\n"+
+		"varying vec4 v_Color;\n"+
+		"void main(){\n"+
+		"gl_FragColor = v_Color;\n"+
+		"}\n";
+		
+		var canvas = document.getElementById("webgl");
+		var gl = canvas.getContext("webgl");
+		if(!gl){
+			console.log("get webgl Failed");
+		}
+		
+		var shaderProgram = blinkProgram(gl,VSHADER_SOURCE,FSHADER_SOURCE);
+		function main(){
+			var verticesInform = new Float32Array([
+				 0.0,  0.5,  -0.4,  0.4,  1.0,  0.4, // The back green one
+				-0.5, -0.5,  -0.4,  0.4,  1.0,  0.4,
+				 0.5, -0.5,  -0.4,  1.0,  0.4,  0.4, 
+			   
+				 0.5,  0.4,  -0.2,  1.0,  0.4,  0.4, // The middle yellow one
+				-0.5,  0.4,  -0.2,  1.0,  1.0,  0.4,
+				 0.0, -0.6,  -0.2,  1.0,  1.0,  0.4, 
+
+				 0.0,  0.5,   0.0,  0.4,  0.4,  1.0,  // The front blue one 
+				-0.5, -0.5,   0.0,  0.4,  0.4,  1.0,
+				 0.5, -0.5,   0.0,  1.0,  0.4,  0.4, 
+			]);
+			var verticesBuffer = gl.createBuffer();
+			if(!verticesBuffer){
+				console.log("create buffer Failed");
+			}
+			gl.bindBuffer(gl.ARRAY_BUFFER,verticesBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER,verticesInform,gl.STATIC_DRAW);
+			
+			var FSIZE = verticesInform.BYTES_PER_ELEMENT;
+			var a_Position = gl.getAttribLocation(shaderProgram,"a_Position");
+			if(a_Position < 0){
+				console.log("get a_Position Failed");
+			}
+			gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, FSIZE*6, 0);
+			gl.enableVertexAttribArray(a_Position);
+			
+			var a_Color = gl.getAttribLocation(shaderProgram,"a_Color");
+			if(a_Color<0){
+				console.log("get a_Color Failed");
+			}
+			gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false,FSIZE*6, FSIZE*3);
+			gl.enableVertexAttribArray(a_Color);
+			
+			var u_ViewMatrix = gl.getUniformLocation(shaderProgram,"u_ViewMatrix");
+			var u_ProjMatrix = gl.getUniformLocation(shaderProgram,"u_ProjMatrix");
+			if(!u_ViewMatrix){
+				console.log("get u_ViewMatrix Failed");
+			}
+			if(!u_ProjMatrix){
+				console.log("get u_ProjMatrix Failed");
+			}
+			
+			gl.clearColor(1.0, 1.0, 1.0, 1.0);
+			
+			var viewMatrix = new Matrix4();
+			document.onkeydown=function(ev){
+				controlKey(ev,gl,viewMatrix,u_ViewMatrix);
+			}
+			var projMatrix = new Matrix4();
+			projMatrix.setOrtho(-1.0, 1.0, -1.0, 1.0, 0.0,2.0);
+			gl.uniformMatrix4fv(u_ProjMatrix,false,projMatrix.elements);
+			finalDraw(gl,viewMatrix,u_ViewMatrix);
+		}
+		
+		g_eyeX=0.20,g_eyeY=0.25,g_eyeZ=0.25;
+		function controlKey(ev,gl,viewMatrix,u_ViewMatrix){
+			if(ev.keyCode == 39){
+				g_eyeX += 0.01;
+			}
+			else if(ev.keyCode == 37){
+				g_eyeX -= 0.01;
+			}
+			else{
+				return;
+			}
+			finalDraw(gl,viewMatrix,u_ViewMatrix)
+		}
+		
+		function finalDraw(gl,viewMatrix,u_ViewMatrix){
+			viewMatrix.setLookAt(g_eyeX,g_eyeY,g_eyeZ,0,0,0,0,1,0);
+			gl.uniformMatrix4fv(u_ViewMatrix,false,viewMatrix.elements);
+			gl.clear(gl.COLOR_BUFFER_BIT);
+			gl.drawArrays(gl.TRIANGLES,0,9);
+		}
+		function blinkProgram(gl,VSHADER_SOURCE,FSHADER_SOURCE){
+			var vertShader = gl.createShader(gl.VERTEX_SHADER);
+			gl.shaderSource(vertShader, VSHADER_SOURCE);
+			gl.compileShader(vertShader);
+			if(!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS))
+			{  
+				console.log("vertShader erro:  "+gl.getShaderInfoLog(vertShader));  
+			}
+			
+			var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+			gl.shaderSource(fragShader, FSHADER_SOURCE);
+			gl.compileShader(fragShader);
+			if(!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS))
+			{  
+				console.log("fragShader erro:  "+gl.getShaderInfoLog(fragShader));  
+			}
+			
+			var shaderProgram = gl.createProgram();
+			gl.attachShader(shaderProgram, vertShader);
+			gl.attachShader(shaderProgram, fragShader);
+			gl.linkProgram(shaderProgram);
+			if(!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
+			{        
+				console.log(gl.getProgramInfoLog(shaderProgram));  
+			}
+			
+			gl.useProgram(shaderProgram);
+			return shaderProgram;
+		};
+		main();
+	</script>
+</html>
+		
