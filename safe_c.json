@@ -1,8 +1,6 @@
-[{
-“name”: “Google”,
-“url”: “http://www.google.com”
-},
 {
-“name”: “Baidu”,
-“url”: “http://www.baidu.com”
-}]
+"1":
+[{"data":123,"url":456},{"data":123,"url":456}],
+"2":
+[{"data":123,"url":456},{"data":123,"url":456}]
+}
